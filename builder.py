@@ -54,7 +54,7 @@ def _nice(t):
 def _try_stat(filename):
     try:
         return os.stat(filename)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.ENOENT:
             return None
         else:
@@ -90,7 +90,7 @@ class BuildJob:
             if not dirty:
                 # target doesn't need to be built; skip the whole task
                 return self._after2(0)
-        except ImmediateReturn, e:
+        except ImmediateReturn as e:
             return self._after2(e.rv)
 
         if vars.NO_OOB or dirty == True:
@@ -137,7 +137,7 @@ class BuildJob:
                 return self._after2(1)
         unlink(self.tmpname1)
         unlink(self.tmpname2)
-        ffd = os.open(self.tmpname1, os.O_CREAT|os.O_RDWR|os.O_EXCL, 0666)
+        ffd = os.open(self.tmpname1, os.O_CREAT|os.O_RDWR|os.O_EXCL, 0o666)
         close_on_exec(ffd, True)
         self.f = os.fdopen(ffd, 'w+')
         # this will run in the dofile's directory, so use only basenames here
@@ -249,7 +249,7 @@ class BuildJob:
             elif st1.st_size > 0:
                 try:
                     os.rename(self.tmpname1, t)
-                except OSError, e:
+                except OSError as e:
                     if e.errno == errno.ENOENT:
                         unlink(t)
                     else:

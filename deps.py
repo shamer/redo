@@ -48,8 +48,8 @@ def isdirty(f, depth, max_changed,
                 dirty = DIRTY
         elif mode == 'm':
             sub = isdirty(f2, depth = depth + '  ',
-                          max_changed = max(f.changed_runid,
-                                            f.checked_runid),
+                          max_changed = max(f.changed_runid or 0,
+                                            f.checked_runid or 0),
                           is_checked=is_checked, set_checked=set_checked)
             if sub:
                 debug('%s-- DIRTY (sub)\n' % depth)

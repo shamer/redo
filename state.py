@@ -29,7 +29,7 @@ def db():
     dbfile = '%s/db.sqlite3' % dbdir
     try:
         os.mkdir(dbdir)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EEXIST:
             pass  # if it exists, that's okay
         else:
@@ -125,7 +125,8 @@ def relpath(t, base):
     base = os.path.normpath(base)
     tparts = t.split('/')
     bparts = base.split('/')
-    for tp,bp in zip(tparts,bparts):
+    parts = list(zip(tparts, bparts))
+    for tp,bp in parts:
         if tp != bp:
             break
         tparts.pop(0)
@@ -178,7 +179,7 @@ class File(object):
         (self.id, self.name, self.is_generated, self.is_override,
          self.checked_runid, self.changed_runid, self.failed_runid,
          self.stamp, self.csum) = cols
-        if self.name == ALWAYS and self.changed_runid < vars.RUNID:
+        if self.name == ALWAYS and (self.changed_runid or 0) < vars.RUNID:
             self.changed_runid = vars.RUNID
     
     def __init__(self, id=None, name=None, cols=None):
@@ -305,7 +306,7 @@ class Lock:
         self.owned = False
         self.fid = fid
         self.lockfile = os.open(os.path.join(vars.BASE, '.redo/lock.%d' % fid),
-                                os.O_RDWR | os.O_CREAT, 0666)
+                                os.O_RDWR | os.O_CREAT, 0o666)
         close_on_exec(self.lockfile, True)
         assert(_locks.get(fid,0) == 0)
         _locks[fid] = 1
@@ -320,7 +321,7 @@ class Lock:
         assert(not self.owned)
         try:
             fcntl.lockf(self.lockfile, fcntl.LOCK_EX|fcntl.LOCK_NB, 0, 0)
-        except IOError, e:
+        except IOError as e:
             if e.errno in (errno.EAGAIN, errno.EACCES):
                 pass  # someone else has it locked
             else:

@@ -25,4 +25,4 @@ for f in state.files():
     if f.is_generated and f.read_stamp() != state.STAMP_MISSING:
         if deps.isdirty(f, depth='', max_changed=vars.RUNID,
                         is_checked=is_checked, set_checked=set_checked):
-            print f.nicename()
+            print(f.nicename())

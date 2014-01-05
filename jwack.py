@@ -20,14 +20,14 @@ def _release(n):
     _debug('release(%d)\n' % n)
     _mytokens += n
     if _mytokens > 1:
-        os.write(_fds[1], 't' * (_mytokens-1))
+        os.write(_fds[1], b't' * (_mytokens-1))
         _mytokens = 1
 
 
 def release_mine():
     global _mytokens
     assert(_mytokens >= 1)
-    os.write(_fds[1], 't')
+    os.write(_fds[1], b't')
     _mytokens -= 1
 
 
@@ -51,7 +51,7 @@ def _try_read(fd, n):
     # compatible with GNU Make, and they can't handle it.
     r,w,x = select.select([fd], [], [], 0)
     if not r:
-        return ''  # try again
+        return b''  # try again
     # ok, the socket is readable - but some other process might get there
     # first.  We have to set an alarm() in case our read() gets stuck.
     oldh = signal.signal(signal.SIGALRM, _timeout)
@@ -59,10 +59,10 @@ def _try_read(fd, n):
         signal.alarm(1)  # emergency fallback
         try:
             b = os.read(_fds[0], 1)
-        except OSError, e:
+        except OSError as e:
             if e.errno in (errno.EAGAIN, errno.EINTR):
                 # interrupted or it was nonblocking
-                return ''  # try again
+                return b''  # try again
             else:
                 raise
     finally:
@@ -90,7 +90,7 @@ def setup(maxjobs):
         try:
             fcntl.fcntl(a, fcntl.F_GETFL)
             fcntl.fcntl(b, fcntl.F_GETFL)
-        except IOError, e:
+        except IOError as e:
             if e.errno == errno.EBADF:
                 raise ValueError('broken --jobserver-fds from make; prefix your Makefile rule with a "+"')
             else:
@@ -107,7 +107,7 @@ def setup(maxjobs):
 
 
 def wait(want_token):
-    rfds = _waitfds.keys()
+    rfds = list(_waitfds.keys())
     if _fds and want_token:
         rfds.append(_fds[0])
     assert(rfds)
@@ -180,7 +180,7 @@ def wait_all():
     _debug("wait_all: empty list\n")
     get_token('self')  # get my token back
     if _toplevel:
-        bb = ''
+        bb = b''
         while 1:
             b = _try_read(_fds[0], 8192)
             bb += b
@@ -196,7 +196,7 @@ def force_return_tokens():
     if n:
         _debug('%d tokens left in force_return_tokens\n' % n)
     _debug('returning %d tokens\n' % n)
-    for k in _waitfds.keys():
+    for k in list(_waitfds.keys()):
         del _waitfds[k]
     if _fds:
         _release(n)
